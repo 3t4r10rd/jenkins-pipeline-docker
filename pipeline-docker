@@ -1,4 +1,4 @@
-stpipeline {
+pipeline {
     agent {
         dcoker {
             image 'http://34.125.121.238:8888/dockeragent:1'
