@@ -1,9 +1,10 @@
 pipeline {
     agent {
         docker {
-            image 'http://34.125.184.162:8888/dockeragent:1'
+            image 'dockeragent:$tag'
             registryUrl 'http://34.125.184.162:8888'
-            registryCredentialsId 'ba56255a-d94b-4ab0-b89c-8cab76fe3c02'
+            registryCredentialsId '0956746a-1ee8-43f5-9651-cf7aada4b50f'
+            args '-u root --privileged -v /var/run/docker.sock:/var/run/docker.sock'
         }
     }
     
@@ -11,9 +12,11 @@ pipeline {
         
         stage ('Copy sources from github and remote machine') {
             steps {
-                git 'https://github.com/3t4r10rd/boxfuse-test.git'
-                sh 'ssh-keyscan -H 34.118.71.129 >> ~/.ssh/known_hosts'
-                sh 'scp root@34.118.71.129:/home/docker /home/docker'
+                git 'https://github.com/3t4r10rd/boxfuse5.git'
+                //sh 'ssh-keyscan -H 34.118.71.129 >> /root/.ssh/known_hosts'
+                //sshagent(['0b09ca00-b982-4731-b7c0-dc71fac8eb25']) {
+                //sh 'scp root@34.118.71.129:/home/docker /home/docker'
+                //}
             }
         }
         
@@ -25,9 +28,13 @@ pipeline {
         
         stage ('Make docker iamge') {
             steps {
-                sh 'cp $(find -name *.war) /home/docker && cd /home/docker/ && docker build -t maventomcat .'
+                //sh 'mkdir /home/docker'
+                sh 'cp $(find -name "*.war") /home/docker'
+                //sh 'echo $(ls /home/docker/)'
+                sh 'docker build -t maventomcat /home/docker/'
                 sh 'docker tag maventomcat 34.125.184.162:8888/maventomcat:1'
-                sh 'rm -rf /etc/docker/daemon.json  && echo "{ \"insecure-registries\" : [\"34.125.121.238:8888\"] }" >> /etc/docker/daemon.json && service docker restart'
+                sh 'rm -rf /etc/docker/daemon.json  && echo "{ \"insecure-registries\" : [\"34.125.184.162:8888\"] }" >> /etc/docker/daemon.json'
+                //sh 'service docker restart'
                 sh 'docker push 34.125.184.162:8888/maventomcat:1'
             }
         } 
