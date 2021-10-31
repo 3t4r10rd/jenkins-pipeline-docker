@@ -1,3 +1,4 @@
+//$srv_nex - docker registry sererer:port, $tag - tag dockeragent image
 pipeline {
     agent {
         docker {
