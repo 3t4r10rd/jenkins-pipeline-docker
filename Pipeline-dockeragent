@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'dockeragent:$tag'
-            registryUrl 'http://34.125.184.162:8888'
+            registryUrl 'http://$srv_nex'
             registryCredentialsId '0956746a-1ee8-43f5-9651-cf7aada4b50f'
             args '-u root --privileged -v /var/run/docker.sock:/var/run/docker.sock'
         }
@@ -32,10 +32,10 @@ pipeline {
                 sh 'cp $(find -name "*.war") /home/docker'
                 //sh 'echo $(ls /home/docker/)'
                 sh 'docker build -t maventomcat /home/docker/'
-                sh 'docker tag maventomcat 34.125.184.162:8888/maventomcat:1'
-                sh 'rm -rf /etc/docker/daemon.json  && echo "{ \"insecure-registries\" : [\"34.125.184.162:8888\"] }" >> /etc/docker/daemon.json'
+                sh 'docker tag maventomcat $srv_nex/maventomcat:1'
+                sh 'rm -rf /etc/docker/daemon.json  && echo "{ \"insecure-registries\" : [\"$srv_nex\"] }" >> /etc/docker/daemon.json'
                 //sh 'service docker restart'
-                sh 'docker push 34.125.184.162:8888/maventomcat:1'
+                sh 'docker push $srv_nex/maventomcat:1'
             }
         } 
     }
