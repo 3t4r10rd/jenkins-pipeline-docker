@@ -1,8 +1,17 @@
-//$srv_nex - docker registry sererer:port, $tag - tag dockeragent image
+/* Attention! Part of code is commented! (It didn’t remove to see the different solution options)
+Solution has parametrs:
+$srv_nex - docker registry sererer:port, 
+$tag - tag dockeragent image
+etc
+*/
+
+
+
+
 pipeline {
     agent {
         docker {
-            image 'dockeragent:$tag'
+            image '$dockeragent'
             registryUrl 'http://$srv_nex'
             registryCredentialsId '0956746a-1ee8-43f5-9651-cf7aada4b50f'
             args '-u root --privileged -v /var/run/docker.sock:/var/run/docker.sock'
@@ -32,13 +41,28 @@ pipeline {
                 //sh 'mkdir /home/docker'
                 sh 'cp $(find -name "*.war") /home/docker'
                 //sh 'echo $(ls /home/docker/)'
-                sh 'docker build -t maventomcat /home/docker/'
-                sh 'docker tag maventomcat $srv_nex/maventomcat:1'
+                sh 'docker build -t $srv_nex/$fin_image /home/docker/'
+                //sh 'docker tag $fin_image $srv_nex/$fin_image'
                 sh 'rm -rf /etc/docker/daemon.json  && echo "{ \"insecure-registries\" : [\"$srv_nex\"] }" >> /etc/docker/daemon.json'
                 //sh 'service docker restart'
-                sh 'docker push $srv_nex/maventomcat:1'
+                sh 'docker push $srv_nex/$fin_image'
             }
         } 
+        
+        stage ('Pull docker image on remote host') {
+            steps {
+                //sh 'sudo su'
+                sh 'ssh-keyscan $rmt_hst >> ~/.ssh/known_hosts'
+                //sh 'ssh root@$rmt_hst \'docker run -d -p 80:8080 \$srv_nex/\$fin_image\''
+                sh 'ssh root@$rmt_hst \'docker run -d -p 8080:8080 34.125.184.162:8888/maventomcat:1\'' /* << EOF 
+        rm -rf /etc/docker/daemon.json
+        echo "{ \\"insecure-registries\\" : [\\"$srv_nex\\"] }" >> /etc/docker/daemon.json 
+        service docker restart 
+        docker login $srv_nex -u $srv_nex_user -p $srv_nex_pswd 
+        sudo docker run -d -p 80:8080 $srv_nex/$fin_image 
+    EOF'''*/
+            }
+        }
     }
     
 }
